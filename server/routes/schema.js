@@ -13,7 +13,7 @@ schemaRoutes.route("/schema").get(async function (_req, res) {
 
   dbConnect.collection("zips").findOne({}, function (err, result) {
     if (err) {
-      res.status(400).send("Error fetching listings!");
+      // res.status(400).send("Error fetching listings!");
     } else {
       let printResult = printSchema(result, 1);
       //   res.writeHeader(200, { "Content-Type": "text/html" });
