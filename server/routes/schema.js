@@ -15,16 +15,20 @@ schemaRoutes.route("/schema").get(async function (_req, res) {
     if (err) {
       res.status(400).send("Error fetching listings!");
     } else {
-       
-      let printResult = printSchema(result, "");
-      console.log('123',printResult)
-      res.type('html')
+      let printResult = printSchema(result, 1);
+      //   res.writeHeader(200, { "Content-Type": "text/html" });
+      //   res.write(printResult);
+      //   res.end();
       res.json(printResult);
     }
   });
 });
 
-function printSchema(obj, indent, result) {
+let result = [];
+let currentIterationLevel = 1;
+function printSchema(obj, level) {
+  
+  
   for (var key in obj) {
     if (typeof obj[key] != "function") {
       //we don't want to print functions
@@ -38,17 +42,27 @@ function printSchema(obj, indent, result) {
           break;
         }
       }
+      let currentObj = {};
+      currentObj.key = key;
+      currentObj.typeof = typeof obj[key];
+      currentObj.type = type
+      currentObj.level = level
+      if(currentIterationLevel < level){
+        result[result.length-1].child = currentObj
+      }
+      currentIterationLevel = level;
 
-      result += `${indent} ${key} \n`;
+      result.push(currentObj);
       
-      //print(indent, key, typeof obj[key], type); //print to console (e.g roles object is_Array)
+    //   result += `${level} ${key}`;
+
+      //print(level, key, typeof obj[key], type); //print to console (e.g roles object is_Array)
       if (typeof obj[key] == "object") {
         //if current property is of object type, print its sub properties too
-        printSchema(obj[key], indent + "\t");
+        printSchema(obj[key], level + 1);
       }
-     
     }
   }
-  return result
+  return result;
 }
 module.exports = schemaRoutes;
