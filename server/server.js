@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(require("./routes/record"));
 app.use(require("./routes/schema"));
+app.use(require("./routes/tree"));
 
 // Global error handling
 app.use(function (err, _req, res) {
