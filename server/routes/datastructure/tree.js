@@ -15,7 +15,7 @@ class TreeNode {
   }
 }
 
-class Tree {
+module.exports = class Tree {
   constructor(key, value = key) {
     this.root = new TreeNode(key, value);
   }
@@ -64,5 +64,17 @@ class Tree {
       if (node.key === key) return node;
     }
     return undefined;
+  }
+
+  data() {
+    let jsonDataList = [];
+    let jsondata = {};
+    let child = {};
+    let root = {};
+    for (let node of this.preOrderTraversal()) {
+      jsonDataList.push(node.value)
+    }
+
+    return jsonDataList;
   }
 }
