@@ -13,7 +13,7 @@ treeRoutes.route("/tree").get(async function (_req, res) {
   tree.insert(12, 121, "BG");
 
   res.json({
-    KK: tree.data()
+    data: tree.data()
   });
 });
 

@@ -1,5 +1,5 @@
 const express = require("express");
-
+var Tree = require("./datastructure/tree");
 // schemaRoutes is an instance of the express router.
 // We use it to define our routes.
 // The router will be added as a middleware and will take control of requests starting with path /schema.
@@ -8,27 +8,63 @@ const schemaRoutes = express.Router();
 // This will help us connect to the database
 const dbo = require("../db/conn");
 // This section will help you get a list of all the records.
-schemaRoutes.route("/schema").get(async function (_req, res) {
+let flatNodeArray = [];
+let prevNode = null;
+const tree = new Tree('1', "root");
+let result = [];
+schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
+  tree.children = []
+  result = [];
   const dbConnect = dbo.getDb();
 
-  dbConnect.collection("zips").findOne({}, function (err, result) {
+  dbConnect.collection(req.params.tablename).findOne({}, function (err, result) {
     if (err) {
       // res.status(400).send("Error fetching listings!");
     } else {
-      let printResult = printSchema(result, 1);
-      //   res.writeHeader(200, { "Content-Type": "text/html" });
-      //   res.write(printResult);
-      //   res.end();
-      res.json(printResult);
+      let printResult = printSchema(result, 1, '1');
+      // res.json(tree.data());
+      // res.json(printResult);
+
+
+      /// Json Representation
+      let treeData = tree.data();
+      flatNode(treeData);
+      // res.json(flatNodeArray)
+
+      flatNodeArray = uniqBy(flatNodeArray, JSON.stringify);
+      /// Table representation
+      let table = ""
+      table += "<table cellpadding='5' cellspacing='0' border='1'>"
+      table += "<tr>";
+      table += "  <th>";
+      table += "      Attribute";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Data Type";
+      table += "  </th>";
+      table += "</tr>";
+      flatNodeArray.forEach(node =>{
+        table += "<tr>";
+        table += "  <td>";
+        table += `      ${node.attribute}`;
+        table += "  </th>";
+        table += "  <td>";
+        table += `      ${node.dataType}`;
+        table += "  </th>";
+        table += "</tr>";
+      })
+      table += "</table>";
+      res.writeHeader(200, { "Content-Type": "text/html" });
+      res.write(table);
+      res.end();
     }
   });
 });
 
-let result = [];
+
 let currentIterationLevel = 1;
-function printSchema(obj, level) {
-  
-  
+
+function printSchema(obj, level, parent) {
   for (var key in obj) {
     if (typeof obj[key] != "function") {
       //we don't want to print functions
@@ -43,26 +79,66 @@ function printSchema(obj, level) {
         }
       }
       let currentObj = {};
-      currentObj.key = key;
-      currentObj.typeof = typeof obj[key];
+      switch (typeof obj[key]) {
+        case "object":
+          currentObj.attribute = `${key}{}`;
+          break;
+
+        default:
+          currentObj.attribute = key;
+          break;
+      }
+      currentObj.dataType = typeof obj[key];
       currentObj.type = type
       currentObj.level = level
-      if(currentIterationLevel < level){
-        result[result.length-1].child = currentObj
-      }
+      tree.insert(parent, `${level}-${key}`, currentObj);
       currentIterationLevel = level;
 
       result.push(currentObj);
-      
-    //   result += `${level} ${key}`;
+
+      //   result += `${level} ${key}`;
 
       //print(level, key, typeof obj[key], type); //print to console (e.g roles object is_Array)
       if (typeof obj[key] == "object") {
         //if current property is of object type, print its sub properties too
-        printSchema(obj[key], level + 1);
+        printSchema(obj[key], level + 1, `${level}-${key}`);
       }
     }
   }
   return result;
+}
+
+
+
+function flatNode(node) {
+  for (let child of node) {
+    if (child.name != 'root') {
+      let attribute = child.name.attribute;
+      if (attribute == "_id{}") {
+        child.children = []
+      }
+      for (let i = 1; i < child.name.level; i++) {
+        attribute = `${prevNode.name.attribute}.${attribute}`
+      }
+      let nodeObj = {
+        attribute: attribute,
+        dataType: child.name.dataType,
+      }
+      flatNodeArray.push(nodeObj)
+    }
+
+    if (child.children && Array.isArray(child.children) && child.children.length > 0) {
+      prevNode = child
+      flatNode(child.children)
+    }
+  }
+};
+
+function uniqBy(a, key) {
+  var seen = {};
+  return a.filter(function(item) {
+      var k = key(item);
+      return seen.hasOwnProperty(k) ? false : (seen[k] = true);
+  })
 }
 module.exports = schemaRoutes;

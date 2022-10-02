@@ -67,14 +67,19 @@ module.exports = class Tree {
   }
 
   data() {
-    let jsonDataList = [];
-    let jsondata = {};
-    let child = {};
-    let root = {};
+    var tree = [];
+    var lookup = {};
+
     for (let node of this.preOrderTraversal()) {
-      jsonDataList.push(node.value)
+      var obj = { key: node.key, parent_key: node.parent ? node.parent.key : null, name: node.value, children: [] };
+      lookup[obj.key] = obj;
+      if (lookup[obj.parent_key]) {
+        lookup[obj.parent_key].children.push(obj);
+      } else {
+        tree.push(obj);
+      }
     }
 
-    return jsonDataList;
+    return tree;
   }
 }
