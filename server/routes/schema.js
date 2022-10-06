@@ -144,7 +144,11 @@ function printSchema(obj, level, parent) {
       let currentObj = {};
       switch (typeof obj[key]) {
         case "object":
-          currentObj.attribute = `${key}{}`;
+          if(type==="==is_Array=="){
+            currentObj.attribute = `${key}[]`;
+          }else{
+            currentObj.attribute = `${key}{}`;
+          }
           break;
 
         default:
