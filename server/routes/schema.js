@@ -16,6 +16,38 @@ schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
   tree.children = []
   result = [];
   const dbConnect = dbo.getDb();
+  const coll = dbConnect.collection(req.params.tablename);
+  const index = await coll.indexes();
+  let indexObj={};
+
+  const getIndexNameAndFiled=(value)=>{
+    value=value.replaceAll("{}","");
+    value=value.replaceAll("[]","");
+    
+    for (let i = 0; i < index.length; i++) {
+      if(index[i].key[value]){
+        indexObj.indexId=value;
+        indexObj.name=index[i].name;
+      }else{
+        indexObj={}
+      }
+      console.log(indexObj);
+
+    }
+
+  //  let kk= index.filter((x)=>{
+  //     if(x.key[value]){
+
+  //         return indexObj
+  //     }else{
+  //       return indexObj={}
+  //     }
+  //   });
+  //   console.log(kk);
+    return 
+  }
+
+
 
   dbConnect.collection(req.params.tablename).findOne({}, function (err, result) {
     if (err) {
@@ -32,6 +64,7 @@ schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
       // res.json(flatNodeArray)
 
       flatNodeArray = uniqBy(flatNodeArray, JSON.stringify);
+
       /// Table representation
       let table = ""
       table += "<table cellpadding='5' cellspacing='0' border='1'>"
@@ -42,6 +75,27 @@ schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
       table += "  <th>";
       table += "      Data Type";
       table += "  </th>";
+      table += "  <th>";
+      table += "      Value Domain or Format";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Encryption";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Comments";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Index Name";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Index Fields";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Partial Expression";
+      table += "  </th>";
+      table += "  <th>";
+      table += "      Other (TTL, etc)";
+      table += "  </th>";
       table += "</tr>";
       flatNodeArray.forEach(node =>{
         table += "<tr>";
@@ -50,6 +104,27 @@ schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
         table += "  </th>";
         table += "  <td>";
         table += `      ${node.dataType}`;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     `;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     `;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     `;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     ${getIndexNameAndFiled(node.attribute)?.name??""}`;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     ${getIndexNameAndFiled(node.attribute)?.indexId??""}`;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     `;
+        table += "  </th>";
+        table += "  <td>";
+        table += `     `;
         table += "  </th>";
         table += "</tr>";
       })
