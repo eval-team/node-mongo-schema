@@ -10,132 +10,120 @@ const dbo = require("../db/conn");
 // This section will help you get a list of all the records.
 let flatNodeArray = [];
 let prevNode = null;
-const tree = new Tree('1', "root");
+const tree = new Tree("1", "root");
 let result = [];
 schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
-  tree.children = []
+  tree.children = [];
   result = [];
   const dbConnect = dbo.getDb();
   const coll = dbConnect.collection(req.params.tablename);
   const index = await coll.indexes();
-  let indexObj={};
+  let indexObj = {};
 
-  const getIndexNameAndFiled=(value)=>{
-    value=value.replaceAll("{}","");
-    value=value.replaceAll("[]","");
-    
+  const getIndexNameAndFiled = (value) => {
+    value = value.replaceAll("{}", "");
+    value = value.replaceAll("[]", "");
+
     for (let i = 0; i < index.length; i++) {
-      if(index[i].key[value]){
-        indexObj.indexId=value;
-        indexObj.name=index[i].name;
-      }else{
-        indexObj={}
+      if (index[i].key[value]) {
+        indexObj.indexId = value;
+        indexObj.name = index[i].name;
+        return indexObj;
+      } else {
+        indexObj = {};
       }
-      console.log(indexObj);
-
     }
+  };
 
-  //  let kk= index.filter((x)=>{
-  //     if(x.key[value]){
+  dbConnect
+    .collection(req.params.tablename)
+    .findOne({}, function (err, result) {
+      if (err) {
+        // res.status(400).send("Error fetching listings!");
+      } else {
+        let printResult = printSchema(result, 1, "1");
+        // res.json(tree.data());
+        // res.json(printResult);
 
-  //         return indexObj
-  //     }else{
-  //       return indexObj={}
-  //     }
-  //   });
-  //   console.log(kk);
-    return 
-  }
+        /// Json Representation
+        let treeData = tree.data();
+        flatNode(treeData);
+        // res.json(flatNodeArray)
 
+        flatNodeArray = uniqBy(flatNodeArray, JSON.stringify);
 
-
-  dbConnect.collection(req.params.tablename).findOne({}, function (err, result) {
-    if (err) {
-      // res.status(400).send("Error fetching listings!");
-    } else {
-      let printResult = printSchema(result, 1, '1');
-      // res.json(tree.data());
-      // res.json(printResult);
-
-
-      /// Json Representation
-      let treeData = tree.data();
-      flatNode(treeData);
-      // res.json(flatNodeArray)
-
-      flatNodeArray = uniqBy(flatNodeArray, JSON.stringify);
-
-      /// Table representation
-      let table = ""
-      table += "<table cellpadding='5' cellspacing='0' border='1'>"
-      table += "<tr>";
-      table += "  <th>";
-      table += "      Attribute";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Data Type";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Value Domain or Format";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Encryption";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Comments";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Index Name";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Index Fields";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Partial Expression";
-      table += "  </th>";
-      table += "  <th>";
-      table += "      Other (TTL, etc)";
-      table += "  </th>";
-      table += "</tr>";
-      flatNodeArray.forEach(node =>{
+        /// Table representation
+        let table = "";
+        table += "<table cellpadding='5' cellspacing='0' border='1'>";
         table += "<tr>";
-        table += "  <td>";
-        table += `      ${node.attribute}`;
+        table += "  <th>";
+        table += "      Attribute";
         table += "  </th>";
-        table += "  <td>";
-        table += `      ${node.dataType}`;
+        table += "  <th>";
+        table += "      Data Type";
         table += "  </th>";
-        table += "  <td>";
-        table += `     `;
+        table += "  <th>";
+        table += "      Value Domain or Format";
         table += "  </th>";
-        table += "  <td>";
-        table += `     `;
+        table += "  <th>";
+        table += "      Encryption";
         table += "  </th>";
-        table += "  <td>";
-        table += `     `;
+        table += "  <th>";
+        table += "      Comments";
         table += "  </th>";
-        table += "  <td>";
-        table += `     ${getIndexNameAndFiled(node.attribute)?.name??""}`;
+        table += "  <th>";
+        table += "      Index Name";
         table += "  </th>";
-        table += "  <td>";
-        table += `     ${getIndexNameAndFiled(node.attribute)?.indexId??""}`;
+        table += "  <th>";
+        table += "      Index Fields";
         table += "  </th>";
-        table += "  <td>";
-        table += `     `;
+        table += "  <th>";
+        table += "      Partial Expression";
         table += "  </th>";
-        table += "  <td>";
-        table += `     `;
+        table += "  <th>";
+        table += "      Other (TTL, etc)";
         table += "  </th>";
         table += "</tr>";
-      })
-      table += "</table>";
-      res.writeHeader(200, { "Content-Type": "text/html" });
-      res.write(table);
-      res.end();
-    }
-  });
+        flatNodeArray.forEach((node) => {
+          table += "<tr>";
+          table += "  <td>";
+          table += `      ${node.attribute}`;
+          table += "  </th>";
+          table += "  <td>";
+          table += `      ${node.dataType}`;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     `;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     `;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     `;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     ${getIndexNameAndFiled(node.attribute)?.name ?? ""}`;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     ${
+            getIndexNameAndFiled(node.attribute)?.indexId ?? ""
+          }`;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     `;
+          table += "  </th>";
+          table += "  <td>";
+          table += `     `;
+          table += "  </th>";
+          table += "</tr>";
+        });
+        table += "</table>";
+        res.writeHeader(200, { "Content-Type": "text/html" });
+        res.write(table);
+        res.end();
+      }
+    });
 });
-
 
 let currentIterationLevel = 1;
 
@@ -164,8 +152,8 @@ function printSchema(obj, level, parent) {
           break;
       }
       currentObj.dataType = typeof obj[key];
-      currentObj.type = type
-      currentObj.level = level
+      currentObj.type = type;
+      currentObj.level = level;
       tree.insert(parent, `${level}-${key}`, currentObj);
       currentIterationLevel = level;
 
@@ -183,37 +171,39 @@ function printSchema(obj, level, parent) {
   return result;
 }
 
-
-
 function flatNode(node) {
   for (let child of node) {
-    if (child.name != 'root') {
+    if (child.name != "root") {
       let attribute = child.name.attribute;
       if (attribute == "_id{}") {
-        child.children = []
+        child.children = [];
       }
       for (let i = 1; i < child.name.level; i++) {
-        attribute = `${prevNode.name.attribute}.${attribute}`
+        attribute = `${prevNode.name.attribute}.${attribute}`;
       }
       let nodeObj = {
         attribute: attribute,
         dataType: child.name.dataType,
-      }
-      flatNodeArray.push(nodeObj)
+      };
+      flatNodeArray.push(nodeObj);
     }
 
-    if (child.children && Array.isArray(child.children) && child.children.length > 0) {
-      prevNode = child
-      flatNode(child.children)
+    if (
+      child.children &&
+      Array.isArray(child.children) &&
+      child.children.length > 0
+    ) {
+      prevNode = child;
+      flatNode(child.children);
     }
   }
-};
+}
 
 function uniqBy(a, key) {
   var seen = {};
-  return a.filter(function(item) {
-      var k = key(item);
-      return seen.hasOwnProperty(k) ? false : (seen[k] = true);
-  })
+  return a.filter(function (item) {
+    var k = key(item);
+    return seen.hasOwnProperty(k) ? false : (seen[k] = true);
+  });
 }
 module.exports = schemaRoutes;
