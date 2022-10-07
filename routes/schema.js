@@ -105,9 +105,8 @@ schemaRoutes.route("/schema/:tablename").get(async function (req, res) {
           table += `     ${getIndexNameAndFiled(node.attribute)?.name ?? ""}`;
           table += "  </th>";
           table += "  <td>";
-          table += `     ${
-            getIndexNameAndFiled(node.attribute)?.indexId ?? ""
-          }`;
+          table += `     ${getIndexNameAndFiled(node.attribute)?.indexId ?? ""
+            }`;
           table += "  </th>";
           table += "  <td>";
           table += `     `;
@@ -144,9 +143,9 @@ function printSchema(obj, level, parent) {
       let currentObj = {};
       switch (typeof obj[key]) {
         case "object":
-          if(type==="==is_Array=="){
+          if (type === "==is_Array==") {
             currentObj.attribute = `${key}[]`;
-          }else{
+          } else {
             currentObj.attribute = `${key}{}`;
           }
           break;
@@ -155,7 +154,12 @@ function printSchema(obj, level, parent) {
           currentObj.attribute = key;
           break;
       }
-      currentObj.dataType = typeof obj[key];
+
+      currentObj.dataType = camalize(typeof obj[key]);
+      if (type === "==is_Date==") {
+        currentObj.dataType = `ISODate`;
+      }
+
       currentObj.type = type;
       currentObj.level = level;
       tree.insert(parent, `${level}-${key}`, currentObj);
@@ -201,6 +205,10 @@ function flatNode(node) {
       flatNode(child.children);
     }
   }
+}
+
+function camalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function uniqBy(a, key) {
