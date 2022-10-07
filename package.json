@@ -4,7 +4,7 @@
     "main": "index.js",
     "type": "commonjs",
     "scripts": {
-        "start": "node_modules/nodemon/bin/nodemon.js server.js",
+        "start": "node server.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "lint": "eslint .",
         "format": "prettier --single-quote --check .",
@@ -20,7 +20,6 @@
         "eslint": "^8.0.0",
         "husky": "^7.0.2",
         "lint-staged": "^11.2.3",
-        "nodemon": "^2.0.20",
         "prettier": "^2.4.1"
     },
     "husky": {
